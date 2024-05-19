@@ -16,6 +16,7 @@
 
 package com.example.android.codelabs.paging.data
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -82,10 +83,14 @@ class GithubRemoteMediator(
             }
         }
 
-        val apiQuery = query + IN_QUALIFIER
+//        val apiQuery = query + IN_QUALIFIER
+        val apiQuery = "$query $IN_QUALIFIER"
+
+        Log.d("TAG: GithubRemoteMediator", "API Query: $apiQuery")
 
         try {
             val apiResponse = service.searchRepos(apiQuery, page, state.config.pageSize)
+            Log.d("TAG: GithubRemoteMediator", "Fetched ${apiResponse.items.size} items")
 
             val repos = apiResponse.items
             val endOfPaginationReached = repos.isEmpty()
@@ -105,8 +110,12 @@ class GithubRemoteMediator(
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (exception: IOException) {
+            Log.e("TAG: GithubRemoteMediator", "IOException: ${exception.message}")
+
             return MediatorResult.Error(exception)
         } catch (exception: HttpException) {
+            Log.e("TAG: GithubRemoteMediator", "HttpException: ${exception.message()}")
+
             return MediatorResult.Error(exception)
         }
     }
