@@ -22,16 +22,19 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.android.codelabs.paging.api.GithubService
+import com.example.android.codelabs.paging.db.RemoteKeysDao
+import com.example.android.codelabs.paging.db.RepoDao
 import com.example.android.codelabs.paging.db.RepoDatabase
 import com.example.android.codelabs.paging.model.Repo
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 /**
  * Repository class that works with local and remote data sources.
  */
-class GithubRepository(
+class GithubRepository @Inject constructor(
     private val service: GithubService,
-    private val database: RepoDatabase
+    private val repoDatabase: RepoDatabase
 ) {
 
     /**
@@ -43,7 +46,8 @@ class GithubRepository(
 
         // appending '%' so we can allow other characters to be before and after the query string
         val dbQuery = "%${query.replace(' ', '%')}%"
-        val pagingSourceFactory = { database.reposDao().reposByName(dbQuery) }
+        // PagingSource factory that provides the data source for Room
+        val pagingSourceFactory = { repoDatabase.reposDao().reposByName(dbQuery) }
 
         @OptIn(ExperimentalPagingApi::class)
         return Pager(
@@ -51,9 +55,9 @@ class GithubRepository(
             remoteMediator = GithubRemoteMediator(
                 query,
                 service,
-                database
-            ),
-            pagingSourceFactory = pagingSourceFactory
+                repoDatabase
+            ), // Handles the logic for API and database
+            pagingSourceFactory = pagingSourceFactory // Uses the local database if data exists
         ).flow
     }
 

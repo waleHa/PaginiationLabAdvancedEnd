@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2018 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.android.codelabs.paging.ui
 
 import androidx.lifecycle.SavedStateHandle
@@ -25,6 +9,7 @@ import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.example.android.codelabs.paging.data.GithubRepository
 import com.example.android.codelabs.paging.model.Repo
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,26 +23,17 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-/**
- * ViewModel for the [SearchRepositoriesActivity] screen.
- * The ViewModel works with the [GithubRepository] to get the data.
- */
-class SearchRepositoriesViewModel(
+
+@HiltViewModel
+class SearchRepositoriesViewModel @Inject constructor(
     private val repository: GithubRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    /**
-     * Stream of immutable states representative of the UI.
-     */
     val state: StateFlow<UiState>
-
     val pagingDataFlow: Flow<PagingData<UiModel>>
-
-    /**
-     * Processor of side effects from the UI which in turn feedback into [state]
-     */
     val accept: (UiAction) -> Unit
 
     init {
@@ -71,17 +47,15 @@ class SearchRepositoriesViewModel(
         val queriesScrolled = actionStateFlow
             .filterIsInstance<UiAction.Scroll>()
             .distinctUntilChanged()
-            // This is shared to keep the flow "hot" while caching the last query scrolled,
-            // otherwise each flatMapLatest invocation would lose the last query scrolled,
             .shareIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+                started = SharingStarted.WhileSubscribed(5000),
                 replay = 1
             )
             .onStart { emit(UiAction.Scroll(currentQuery = lastQueryScrolled)) }
 
         pagingDataFlow = searches
-            .flatMapLatest { searchRepo(queryString = it.query) }
+            .flatMapLatest { searchRepo(it.query) }
             .cachedIn(viewModelScope)
 
         state = combine(
@@ -92,19 +66,16 @@ class SearchRepositoriesViewModel(
             UiState(
                 query = search.query,
                 lastQueryScrolled = scroll.currentQuery,
-                // If the search query matches the scroll query, the user has scrolled
                 hasNotScrolledForCurrentSearch = search.query != scroll.currentQuery
             )
         }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+                started = SharingStarted.WhileSubscribed(5000),
                 initialValue = UiState()
             )
 
-        accept = { action ->
-            viewModelScope.launch { actionStateFlow.emit(action) }
-        }
+        accept = { action -> viewModelScope.launch { actionStateFlow.emit(action) } }
     }
 
     override fun onCleared() {
@@ -118,25 +89,14 @@ class SearchRepositoriesViewModel(
             .map { pagingData -> pagingData.map { UiModel.RepoItem(it) } }
             .map {
                 it.insertSeparators { before, after ->
-                    if (after == null) {
-                        // we're at the end of the list
-                        return@insertSeparators null
-                    }
-
-                    if (before == null) {
-                        // we're at the beginning of the list
-                        return@insertSeparators UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
-                    }
-                    // check between 2 items
-                    if (before.roundedStarCount > after.roundedStarCount) {
-                        if (after.roundedStarCount >= 1) {
-                            UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
-                        } else {
-                            UiModel.SeparatorItem("< 10.000+ stars")
+                    when {
+                        after == null -> null // end of the list
+                        before == null -> UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                        before.roundedStarCount > after.roundedStarCount -> {
+                            if (after.roundedStarCount >= 1) UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                            else UiModel.SeparatorItem("< 10.000+ stars")
                         }
-                    } else {
-                        // no separator
-                        null
+                        else -> null
                     }
                 }
             }

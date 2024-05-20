@@ -17,8 +17,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.7.0'
-    ext.hilt_version = '2.38.1'
+    ext.kotlin_version = '1.8.0'
+    ext.hilt_version = '2.51.1'
     repositories {
         google()
         mavenCentral()
@@ -49,8 +49,9 @@ ext {
     coreVersion = '1.7.0'
     recyclerViewVersion = '1.2.1'
     constraintLayoutVersion = '2.1.2'
-    materialVersion = '1.4.0'
-    lifecycleVersion = '2.4.0'
+    materialVersion = '1.6.0'
+
+    lifecycleVersion = '2.7.0'
     roomVersion = '2.5.0'
     pagingVersion = '3.1.0'
     retrofitVersion = '2.9.0'

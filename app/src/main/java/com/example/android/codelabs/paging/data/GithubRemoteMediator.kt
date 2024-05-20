@@ -55,6 +55,7 @@ class GithubRemoteMediator(
                 val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
                 remoteKeys?.nextKey?.minus(1) ?: GITHUB_STARTING_PAGE_INDEX
             }
+
             LoadType.PREPEND -> {
                 val remoteKeys = getRemoteKeyForFirstItem(state)
                 // If remoteKeys is null, that means the refresh result is not in the database yet.
@@ -68,6 +69,7 @@ class GithubRemoteMediator(
                 }
                 prevKey
             }
+
             LoadType.APPEND -> {
                 val remoteKeys = getRemoteKeyForLastItem(state)
                 // If remoteKeys is null, that means the refresh result is not in the database yet.
@@ -86,36 +88,35 @@ class GithubRemoteMediator(
 //        val apiQuery = query + IN_QUALIFIER
         val apiQuery = "$query $IN_QUALIFIER"
 
-        Log.d("TAG: GithubRemoteMediator", "API Query: $apiQuery")
-
         try {
+            // Fetch data from the API
             val apiResponse = service.searchRepos(apiQuery, page, state.config.pageSize)
-            Log.d("TAG: GithubRemoteMediator", "Fetched ${apiResponse.items.size} items")
-
             val repos = apiResponse.items
             val endOfPaginationReached = repos.isEmpty()
+
+            // Store the data in the database
             repoDatabase.withTransaction {
-                // clear all tables in the database
                 if (loadType == LoadType.REFRESH) {
+                    // Clear old data for refresh
                     repoDatabase.remoteKeysDao().clearRemoteKeys()
                     repoDatabase.reposDao().clearRepos()
                 }
+
+                // Calculate keys for next and previous pages
                 val prevKey = if (page == GITHUB_STARTING_PAGE_INDEX) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
                 val keys = repos.map {
                     RemoteKeys(repoId = it.id, prevKey = prevKey, nextKey = nextKey)
                 }
+
+                // Insert new data into the database
                 repoDatabase.remoteKeysDao().insertAll(keys)
                 repoDatabase.reposDao().insertAll(repos)
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (exception: IOException) {
-            Log.e("TAG: GithubRemoteMediator", "IOException: ${exception.message}")
-
             return MediatorResult.Error(exception)
         } catch (exception: HttpException) {
-            Log.e("TAG: GithubRemoteMediator", "HttpException: ${exception.message()}")
-
             return MediatorResult.Error(exception)
         }
     }

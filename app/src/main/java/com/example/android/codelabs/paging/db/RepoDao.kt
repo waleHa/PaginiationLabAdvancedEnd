@@ -36,6 +36,9 @@ interface RepoDao {
     )
     fun reposByName(queryString: String): PagingSource<Int, Repo>
 
+    @Query("SELECT * FROM repos WHERE name LIKE :queryString OR description LIKE :queryString ORDER BY stars DESC, name ASC")
+    suspend fun loadSingle(queryString: String): List<Repo>
+
     @Query("DELETE FROM repos")
     suspend fun clearRepos()
 }
