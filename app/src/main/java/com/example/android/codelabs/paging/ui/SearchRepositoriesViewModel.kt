@@ -7,8 +7,8 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
-import com.example.android.codelabs.paging.data.GithubRepository
-import com.example.android.codelabs.paging.model.Repo
+import com.example.android.codelabs.paging.domain.repository.GithubRepository
+import com.example.android.codelabs.paging.domain.model.Repo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -84,7 +84,8 @@ class SearchRepositoriesViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun searchRepo(queryString: String): Flow<PagingData<UiModel>> =
+    private suspend fun searchRepo(queryString: String): Flow<PagingData<UiModel>> =
+
         repository.getSearchResultStream(queryString)
             .map { pagingData -> pagingData.map { UiModel.RepoItem(it) } }
             .map {

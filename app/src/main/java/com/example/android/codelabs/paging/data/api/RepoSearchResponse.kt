@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.db
+package com.example.android.codelabs.paging.data.api
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import com.example.android.codelabs.paging.domain.model.Repo
+import com.google.gson.annotations.SerializedName
 
-@Dao
-interface RemoteKeysDao {
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(remoteKey: List<RemoteKeys>)
-
-    @Query("SELECT * FROM remote_keys WHERE repoId = :repoId")
-    suspend fun remoteKeysRepoId(repoId: Long): RemoteKeys?
-
-    @Query("DELETE FROM remote_keys")
-    suspend fun clearRemoteKeys()
-}
+/**
+ * Data class to hold repo responses from searchRepo API calls.
+ */
+data class RepoSearchResponse(
+    @SerializedName("total_count") val total: Int = 0,
+    @SerializedName("items") val items: List<Repo> = emptyList(),
+    val nextPage: Int? = null
+)

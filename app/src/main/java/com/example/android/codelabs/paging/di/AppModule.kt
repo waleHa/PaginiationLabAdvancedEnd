@@ -1,12 +1,11 @@
 package com.example.android.codelabs.paging.di
 
-import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import com.example.android.codelabs.paging.api.GithubService
-import com.example.android.codelabs.paging.db.RemoteKeysDao
-import com.example.android.codelabs.paging.db.RepoDao
-import com.example.android.codelabs.paging.db.RepoDatabase
+import com.example.android.codelabs.paging.data.api.GithubService
+import com.example.android.codelabs.paging.data.db.RemoteKeysDao
+import com.example.android.codelabs.paging.data.db.RepoDao
+import com.example.android.codelabs.paging.data.db.RepoDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

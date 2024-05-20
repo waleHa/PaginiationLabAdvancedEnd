@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.db
+package com.example.android.codelabs.paging.data.db
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.android.codelabs.paging.model.Repo
+import com.example.android.codelabs.paging.domain.model.Repo
 
 @Dao
 interface RepoDao {
@@ -29,15 +29,26 @@ interface RepoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(repos: List<Repo>)
 
+    //The reposByName method takes a search query (queryString) and returns a PagingSource.
+    //PagingSource is a component in Paging 3 library that loads pages of data from a data source, which in this case is the local Room database.
+    //The SQL query searches for repositories whose name or description matches the queryString. It returns the results ordered by the number of stars (in descending order) and then by name (in ascending order).
+
     @Query(
         "SELECT * FROM repos WHERE " +
-            "name LIKE :queryString OR description LIKE :queryString " +
-            "ORDER BY stars DESC, name ASC"
+                "name LIKE :queryString OR description LIKE :queryString " +
+                "ORDER BY stars DESC, name ASC"
     )
     fun reposByName(queryString: String): PagingSource<Int, Repo>
 
     @Query("SELECT * FROM repos WHERE name LIKE :queryString OR description LIKE :queryString ORDER BY stars DESC, name ASC")
     suspend fun loadSingle(queryString: String): List<Repo>
+
+    // New method to count the number of repos matching the query
+    @Query(
+        "SELECT COUNT(*) FROM repos WHERE " +
+                "name LIKE :queryString OR description LIKE :queryString"
+    )
+    suspend fun hasReposForQuery(queryString: String): Int
 
     @Query("DELETE FROM repos")
     suspend fun clearRepos()

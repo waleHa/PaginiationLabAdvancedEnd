@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.db
+package com.example.android.codelabs.paging.data.db
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.android.codelabs.paging.model.Repo
+import com.example.android.codelabs.paging.domain.model.Repo
 
 @Database(
     entities = [Repo::class, RemoteKeys::class],

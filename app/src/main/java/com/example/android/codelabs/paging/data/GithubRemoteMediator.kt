@@ -16,21 +16,31 @@
 
 package com.example.android.codelabs.paging.data
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import com.example.android.codelabs.paging.api.GithubService
-import com.example.android.codelabs.paging.api.IN_QUALIFIER
-import com.example.android.codelabs.paging.db.RemoteKeys
-import com.example.android.codelabs.paging.db.RepoDatabase
-import com.example.android.codelabs.paging.model.Repo
+import com.example.android.codelabs.paging.data.api.GithubService
+import com.example.android.codelabs.paging.data.api.IN_QUALIFIER
+import com.example.android.codelabs.paging.data.db.RemoteKeys
+import com.example.android.codelabs.paging.data.db.RepoDatabase
+import com.example.android.codelabs.paging.domain.model.Repo
 import retrofit2.HttpException
 import java.io.IOException
 
 // GitHub page API is 1 based: https://developer.github.com/v3/#pagination
+/*
+initialize: This method ensures that the app always refreshes data on startup.
+load: This method handles the logic for loading data.
+It determines which page of data to load based on the LoadType (REFRESH, PREPEND, APPEND).
+It constructs the query to fetch data from the API.
+It tries to fetch the data from the API using service.searchRepos.
+If the data is successfully fetched, it stores the data in the local Room database using repoDatabase.withTransaction.
+It clears old data from the database if the LoadType is REFRESH.
+It calculates keys for the next and previous pages and stores them in the RemoteKeys table.
+ */
+
 private const val GITHUB_STARTING_PAGE_INDEX = 1
 
 @OptIn(ExperimentalPagingApi::class)

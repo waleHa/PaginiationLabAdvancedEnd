@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.codelabs.paging.databinding.ActivitySearchRepositoriesBinding
+import com.example.android.codelabs.paging.ui.adapter.ReposAdapter
+import com.example.android.codelabs.paging.ui.adapter.ReposLoadStateAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged

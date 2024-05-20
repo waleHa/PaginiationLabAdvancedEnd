@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.ui
+package com.example.android.codelabs.paging.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
