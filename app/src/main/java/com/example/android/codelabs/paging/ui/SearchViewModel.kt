@@ -1,14 +1,21 @@
 package com.example.android.codelabs.paging.ui
 
+import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkInfo
+import android.os.Build
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
-import com.example.android.codelabs.paging.domain.repository.GithubRepository
-import com.example.android.codelabs.paging.domain.model.Repo
+import com.example.android.codelabs.paging.MyApplication
+import com.example.android.codelabs.paging.data.repository.GithubRepository
+import com.example.android.codelabs.paging.domain.localdatasource.RepoLocalDataSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,8 +36,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchRepositoriesViewModel @Inject constructor(
     private val repository: GithubRepository,
-    private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+    private val savedStateHandle: SavedStateHandle,
+    application: Application
+) : AndroidViewModel(application) {
 
     val state: StateFlow<UiState>
     val pagingDataFlow: Flow<PagingData<UiModel>>
@@ -84,24 +92,64 @@ class SearchRepositoriesViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private suspend fun searchRepo(queryString: String): Flow<PagingData<UiModel>> =
+    suspend fun getOfflineKeywords(): List<String> {
+        return repository.getOfflineKeywords().map { it.keyword }
+    }
 
-        repository.getSearchResultStream(queryString)
-            .map { pagingData -> pagingData.map { UiModel.RepoItem(it) } }
-            .map {
-                it.insertSeparators { before, after ->
-                    when {
-                        after == null -> null // end of the list
-                        before == null -> UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
-                        before.roundedStarCount > after.roundedStarCount -> {
-                            if (after.roundedStarCount >= 1) UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
-                            else UiModel.SeparatorItem("< 10.000+ stars")
+    private suspend fun searchRepo(queryString: String): Flow<PagingData<UiModel>> {
+        return if (isConnected()) {
+            repository.getSearchResultStream(queryString)
+                .map { pagingData -> pagingData.map { UiModel.RepoItem(it) } }
+                .map {
+                    it.insertSeparators { before, after ->
+                        when {
+                            after == null -> null
+                            before == null -> UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                            before.roundedStarCount > after.roundedStarCount -> {
+                                if (after.roundedStarCount >= 1) UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                                else UiModel.SeparatorItem("< 10.000+ stars")
+                            }
+
+                            else -> null
                         }
-                        else -> null
                     }
                 }
-            }
+        } else {
+            repository.getSearchResultStreamFromDataBase(queryString)
+                .map { pagingData -> pagingData.map { UiModel.RepoItem(it) } }
+                .map {
+                    it.insertSeparators { before, after ->
+                        when {
+                            after == null -> null
+                            before == null -> UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                            before.roundedStarCount > after.roundedStarCount -> {
+                                if (after.roundedStarCount >= 1) UiModel.SeparatorItem("${after.roundedStarCount}0.000+ stars")
+                                else UiModel.SeparatorItem("< 10.000+ stars")
+                            }
+
+                            else -> null
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun isConnected(): Boolean {
+        val connectivityManager =
+            getApplication<MyApplication>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val networkCapabilities =
+                connectivityManager.getNetworkCapabilities(network) ?: return false
+            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } else {
+            val networkInfo: NetworkInfo? = connectivityManager.activeNetworkInfo
+            networkInfo?.isConnectedOrConnecting == true
+        }
+    }
 }
+
 
 sealed class UiAction {
     data class Search(val query: String) : UiAction()
@@ -115,12 +163,12 @@ data class UiState(
 )
 
 sealed class UiModel {
-    data class RepoItem(val repo: Repo) : UiModel()
+    data class RepoItem(val repoLocalDataSource: RepoLocalDataSource) : UiModel()
     data class SeparatorItem(val description: String) : UiModel()
 }
 
 private val UiModel.RepoItem.roundedStarCount: Int
-    get() = this.repo.stars / 10_000
+    get() = this.repoLocalDataSource.stars / 10_000
 
 private const val LAST_QUERY_SCROLLED: String = "last_query_scrolled"
 private const val LAST_SEARCH_QUERY: String = "last_search_query"

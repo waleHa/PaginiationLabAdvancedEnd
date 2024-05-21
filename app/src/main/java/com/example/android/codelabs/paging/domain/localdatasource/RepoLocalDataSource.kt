@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.domain.model
+package com.example.android.codelabs.paging.domain.localdatasource
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -27,7 +27,7 @@ import com.google.gson.annotations.SerializedName
  * This class also defines the Room repos table, where the repo [id] is the primary key.
  */
 @Entity(tableName = "repos")
-data class Repo(
+data class RepoLocalDataSource(
     @PrimaryKey @field:SerializedName("id") val id: Long,
     @field:SerializedName("name") val name: String,
     @field:SerializedName("full_name") val fullName: String,

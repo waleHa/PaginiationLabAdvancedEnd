@@ -20,10 +20,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.android.codelabs.paging.domain.model.Repo
+import com.example.android.codelabs.paging.data.db.remotekeys.RemoteKeysDao
+import com.example.android.codelabs.paging.domain.localdatasource.RemoteKeysLocalDataSource
+import com.example.android.codelabs.paging.data.db.repo.RepoDao
+import com.example.android.codelabs.paging.domain.localdatasource.RepoLocalDataSource
+import com.example.android.codelabs.paging.data.db.searchkeywords.SearchKeywordDao
+import com.example.android.codelabs.paging.domain.localdatasource.SearchKeywordLocalDataSource
 
 @Database(
-    entities = [Repo::class, RemoteKeys::class],
+    entities = [RepoLocalDataSource::class, RemoteKeysLocalDataSource::class, SearchKeywordLocalDataSource::class],
     version = 1,
     exportSchema = false
 )
@@ -31,6 +36,7 @@ abstract class RepoDatabase : RoomDatabase() {
 
     abstract fun reposDao(): RepoDao
     abstract fun remoteKeysDao(): RemoteKeysDao
+    abstract fun searchKeywordDao(): SearchKeywordDao
 
     companion object {
 

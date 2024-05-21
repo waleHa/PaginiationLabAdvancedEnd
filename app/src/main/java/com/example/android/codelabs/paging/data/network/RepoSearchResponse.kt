@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.data.api
+package com.example.android.codelabs.paging.data.network
 
-import com.example.android.codelabs.paging.domain.model.Repo
+import com.example.android.codelabs.paging.domain.localdatasource.RepoLocalDataSource
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -24,6 +24,6 @@ import com.google.gson.annotations.SerializedName
  */
 data class RepoSearchResponse(
     @SerializedName("total_count") val total: Int = 0,
-    @SerializedName("items") val items: List<Repo> = emptyList(),
+    @SerializedName("items") val items: List<RepoLocalDataSource> = emptyList(),
     val nextPage: Int? = null
 )

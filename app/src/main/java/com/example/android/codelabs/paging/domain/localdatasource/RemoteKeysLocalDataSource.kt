@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package com.example.android.codelabs.paging.data.db
+package com.example.android.codelabs.paging.domain.localdatasource
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Dao
-interface RemoteKeysDao {
+@Entity(tableName = "remote_keys")
+data class RemoteKeysLocalDataSource(
+    @PrimaryKey val repoId: Long,
+    val prevKey: Int?,
+    val nextKey: Int?
+)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(remoteKey: List<RemoteKeys>)
-
-    @Query("SELECT * FROM remote_keys WHERE repoId = :repoId")
-    suspend fun remoteKeysRepoId(repoId: Long): RemoteKeys?
-
-    @Query("DELETE FROM remote_keys")
-    suspend fun clearRemoteKeys()
-}

@@ -25,19 +25,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.android.codelabs.paging.R
 import com.example.android.codelabs.paging.databinding.ReposLoadStateFooterViewItemBinding
 
-class ReposLoadStateAdapter(
-    private val retry: () -> Unit
-) : LoadStateAdapter<ReposLoadStateAdapter.ReposLoadStateViewHolder>() {
+class ReposLoadStateAdapter(private val retry: () -> Unit) : LoadStateAdapter<ReposLoadStateAdapter.ReposLoadStateViewHolder>() {
     override fun onBindViewHolder(holder: ReposLoadStateViewHolder, loadState: LoadState) {
         holder.bind(loadState)
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        loadState: LoadState
-    ): ReposLoadStateViewHolder {
-        return ReposLoadStateViewHolder.create(parent, retry)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): ReposLoadStateViewHolder =
+        ReposLoadStateViewHolder.create(parent, retry)
 
     class ReposLoadStateViewHolder(
         private val binding: ReposLoadStateFooterViewItemBinding,
@@ -67,3 +61,4 @@ class ReposLoadStateAdapter(
         }
     }
 }
+

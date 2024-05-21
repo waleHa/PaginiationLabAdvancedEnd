@@ -27,7 +27,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.android.codelabs.paging.R
-import com.example.android.codelabs.paging.domain.model.Repo
+import com.example.android.codelabs.paging.domain.localdatasource.RepoLocalDataSource
 import com.example.android.codelabs.paging.ui.UiModel
 
 /**
@@ -55,7 +55,7 @@ class ReposAdapter : PagingDataAdapter<UiModel, ViewHolder>(UIMODEL_COMPARATOR) 
         val uiModel = getItem(position)
         uiModel.let {
             when (uiModel) {
-                is UiModel.RepoItem -> (holder as RepoViewHolder).bind(uiModel.repo)
+                is UiModel.RepoItem -> (holder as RepoViewHolder).bind(uiModel.repoLocalDataSource)
                 is UiModel.SeparatorItem -> (holder as SeparatorViewHolder).bind(uiModel.description)
                 else -> {}
             }
@@ -66,7 +66,7 @@ class ReposAdapter : PagingDataAdapter<UiModel, ViewHolder>(UIMODEL_COMPARATOR) 
         private val UIMODEL_COMPARATOR = object : DiffUtil.ItemCallback<UiModel>() {
             override fun areItemsTheSame(oldItem: UiModel, newItem: UiModel): Boolean {
                 return (oldItem is UiModel.RepoItem && newItem is UiModel.RepoItem &&
-                        oldItem.repo.fullName == newItem.repo.fullName) ||
+                        oldItem.repoLocalDataSource.fullName == newItem.repoLocalDataSource.fullName) ||
                         (oldItem is UiModel.SeparatorItem && newItem is UiModel.SeparatorItem &&
                                 oldItem.description == newItem.description)
             }
@@ -79,7 +79,7 @@ class ReposAdapter : PagingDataAdapter<UiModel, ViewHolder>(UIMODEL_COMPARATOR) 
 
 
 /**
- * View Holder for a [Repo] RecyclerView list item.
+ * View Holder for a [RepoLocalDataSource] RecyclerView list item.
  */
 class RepoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val name: TextView = view.findViewById(R.id.repo_name)
@@ -88,19 +88,19 @@ class RepoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val language: TextView = view.findViewById(R.id.repo_language)
     private val forks: TextView = view.findViewById(R.id.repo_forks)
 
-    private var repo: Repo? = null
+    private var repoLocalDataSource: RepoLocalDataSource? = null
 
     init {
         view.setOnClickListener {
-            repo?.url?.let { url ->
+            repoLocalDataSource?.url?.let { url ->
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 view.context.startActivity(intent)
             }
         }
     }
 
-    fun bind(repo: Repo?) {
-        if (repo == null) {
+    fun bind(repoLocalDataSource: RepoLocalDataSource?) {
+        if (repoLocalDataSource == null) {
             val resources = itemView.resources
             name.text = resources.getString(R.string.loading)
             description.visibility = View.GONE
@@ -108,30 +108,30 @@ class RepoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             stars.text = resources.getString(R.string.unknown)
             forks.text = resources.getString(R.string.unknown)
         } else {
-            showRepoData(repo)
+            showRepoData(repoLocalDataSource)
         }
     }
 
-    private fun showRepoData(repo: Repo) {
-        this.repo = repo
-        name.text = repo.fullName
+    private fun showRepoData(repoLocalDataSource: RepoLocalDataSource) {
+        this.repoLocalDataSource = repoLocalDataSource
+        name.text = repoLocalDataSource.fullName
 
         // if the description is missing, hide the TextView
         var descriptionVisibility = View.GONE
-        if (repo.description != null) {
-            description.text = repo.description
+        if (repoLocalDataSource.description != null) {
+            description.text = repoLocalDataSource.description
             descriptionVisibility = View.VISIBLE
         }
         description.visibility = descriptionVisibility
 
-        stars.text = repo.stars.toString()
-        forks.text = repo.forks.toString()
+        stars.text = repoLocalDataSource.stars.toString()
+        forks.text = repoLocalDataSource.forks.toString()
 
         // if the language is missing, hide the label and the value
         var languageVisibility = View.GONE
-        if (!repo.language.isNullOrEmpty()) {
+        if (!repoLocalDataSource.language.isNullOrEmpty()) {
             val resources = this.itemView.context.resources
-            language.text = resources.getString(R.string.language, repo.language)
+            language.text = resources.getString(R.string.language, repoLocalDataSource.language)
             languageVisibility = View.VISIBLE
         }
         language.visibility = languageVisibility
